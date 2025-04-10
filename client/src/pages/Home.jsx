@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
+
 export default function Home() {
   return (
     <div>
@@ -17,6 +18,7 @@ export default function Home() {
           <Link to="/register" className="ml-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
             Register
           </Link>
+      
         </div>
       </div>
     </div>

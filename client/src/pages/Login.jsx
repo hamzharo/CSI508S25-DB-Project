@@ -2,9 +2,9 @@
 // import React, { useState } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../features/auth";
-import Input from "../components/Input";
-import Button from "../components/Button";
+import  {login } from "../features/auth";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
 
 export default function Login() {
   const [email, setEmail] = useState("");

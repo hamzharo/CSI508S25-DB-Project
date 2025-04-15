@@ -1,55 +1,9 @@
-// // server/controllers/transactionController.js
-// import db from "../config/db.js";
-
-// // Get User Transactions
-// export const getTransactions = (req, res) => {
-//   const userId = req.user.id;
-
-//   const sql = "SELECT * FROM transactions WHERE sender_id = ? OR receiver_id = ? ORDER BY date DESC";
-//   db.query(sql, [userId, userId], (err, results) => {
-//     if (err) return res.status(500).json({ message: "Database error", error: err });
-
-//     res.json(results);
-//   });
-// };
-
-// // Transfer Funds
-// export const transferFunds = (req, res) => {
-//   const { senderId, receiverId, amount } = req.body;
-
-//   // Validate amount
-//   if (amount <= 0) return res.status(400).json({ message: "Invalid transfer amount" });
-
-//   // Get sender's balance
-//   db.query("SELECT balance FROM users WHERE id = ?", [senderId], (err, results) => {
-//     if (err) return res.status(500).json({ message: "Database error", error: err });
-
-//     if (results.length === 0) return res.status(404).json({ message: "Sender not found" });
-
-//     const senderBalance = results[0].balance;
-
-//     if (senderBalance < amount) return res.status(400).json({ message: "Insufficient balance" });
-
-//     // Perform transaction
-//     const sqlTransfer = `
-//       UPDATE users SET balance = balance - ? WHERE id = ?;
-//       UPDATE users SET balance = balance + ? WHERE id = ?;
-//       INSERT INTO transactions (sender_id, receiver_id, amount, date) VALUES (?, ?, ?, NOW());
-//     `;
-
-//     db.query(sqlTransfer, [amount, senderId, amount, receiverId, senderId, receiverId, amount], (err, result) => {
-//       if (err) return res.status(500).json({ message: "Transaction failed", error: err });
-
-//       res.json({ message: "Transaction successful" });
-//     });
-//   });
-// };
-
-
 // server/controllers/transactionController.js
 import pool from "../config/db.js"; // Import the pool
 
-// Get Transactions for the Logged-in User's Accounts
+// =============================================
+// Get Transactions (Existing & Working)
+// =============================================
 export const getTransactions = async (req, res) => { // Added async
   const userId = req.user.id; // Assumes authMiddleware adds req.user
 
@@ -86,7 +40,9 @@ export const getTransactions = async (req, res) => { // Added async
   }
 };
 
-// Transfer Funds (Refactored for Pool, Accounts, DB Transactions)
+// =============================================
+// Transfer Funds (Existing & Working)
+// =============================================
 export const transferFunds = async (req, res) => { // Added async
   // Get sender user ID from verified token
   const senderUserId = req.user.id;
@@ -113,7 +69,6 @@ export const transferFunds = async (req, res) => { // Added async
 
     // --- Find Sender's Primary Account and Balance ---
     // Simplified: Assuming first account found for user is the one to use
-    // Consider adding logic to select specific sender account if needed
     const findSenderAccountSql = "SELECT id, balance, status FROM accounts WHERE user_id = ? LIMIT 1";
     const [senderAccounts] = await connection.query(findSenderAccountSql, [senderUserId]);
 
@@ -171,12 +126,10 @@ export const transferFunds = async (req, res) => { // Added async
     const deductSql = "UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?"; // Add balance check for safety
     const [deductResult] = await connection.query(deductSql, [transferAmount, senderAccountId, transferAmount]);
     if (deductResult.affectedRows === 0) {
-         // This could happen in a race condition if balance changed after initial check
          await connection.rollback();
          connection.release();
          return res.status(400).json({ message: "Insufficient balance or sender account error." });
     }
-
 
     // 2. Add to receiver
     const addSql = "UPDATE accounts SET balance = balance + ? WHERE id = ?";
@@ -200,21 +153,171 @@ export const transferFunds = async (req, res) => { // Added async
 
   } catch (err) {
     console.error("❌ Transaction failed:", err);
-    // If connection exists and an error occurred, rollback
     if (connection) {
-      try {
-          await connection.rollback();
-          console.log("Transaction rolled back.");
-      } catch (rollbackError) {
-          console.error("❌ Error rolling back transaction:", rollbackError);
-      }
+      try { await connection.rollback(); console.log("Transaction rolled back."); }
+      catch (rollbackError) { console.error("❌ Error rolling back transaction:", rollbackError); }
     }
     res.status(500).json({ message: "Transaction failed.", error: err.message });
   } finally {
-    // Ensure the connection is always released back to the pool
-    if (connection) {
-      connection.release();
-      console.log("DB Connection Released after transfer attempt.");
-    }
+    if (connection) { connection.release(); console.log("DB Connection Released after transfer attempt."); }
   }
+};
+
+
+// =============================================
+// ✅ NEW: Deposit Funds (Added)
+// =============================================
+export const deposit = async (req, res) => {
+    const userId = req.user.id; // From authMiddleware
+    const { accountNumber, amount } = req.body;
+
+    // --- Basic Validation ---
+    const depositAmount = parseFloat(amount);
+    if (!accountNumber || !amount || isNaN(depositAmount) || depositAmount <= 0) {
+        return res.status(400).json({ message: "Valid account number and positive amount are required." });
+    }
+
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // --- Find Account & Verify Ownership/Status ---
+        const findAccountSql = "SELECT id, user_id, status FROM accounts WHERE account_number = ?";
+        const [accounts] = await connection.query(findAccountSql, [accountNumber]);
+
+        if (accounts.length === 0) {
+            await connection.rollback();
+            connection.release();
+            return res.status(404).json({ message: "Account not found." });
+        }
+        const account = accounts[0];
+
+        if (account.user_id !== userId) {
+            await connection.rollback();
+            connection.release();
+            // 403 Forbidden as the account exists but doesn't belong to the user
+            return res.status(403).json({ message: "Access denied. Account does not belong to user." });
+        }
+        if (account.status !== 'active') {
+             await connection.rollback();
+             connection.release();
+             return res.status(400).json({ message: `Account status is '${account.status}'. Cannot deposit.` });
+        }
+
+        const accountId = account.id;
+
+        // --- Perform Deposit Update ---
+        const depositSql = "UPDATE accounts SET balance = balance + ? WHERE id = ?";
+        await connection.query(depositSql, [depositAmount, accountId]);
+
+        // --- Log the Deposit Transaction ---
+        const logSql = `
+            INSERT INTO transactions (type, amount, status, account_id, description)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        await connection.query(logSql, ['deposit', depositAmount, 'completed', accountId, 'Customer deposit']);
+
+        // --- Commit Transaction ---
+        await connection.commit();
+
+        console.log(`✅ Deposit successful: Account ${accountNumber}, Amount: ${depositAmount}`);
+        // Optionally fetch and return the new balance
+        const [updatedAccount] = await connection.query("SELECT balance FROM accounts WHERE id = ?", [accountId]);
+        res.json({ message: "Deposit successful.", newBalance: updatedAccount[0]?.balance });
+
+    } catch (err) {
+        console.error("❌ Deposit failed:", err);
+        if (connection) await connection.rollback();
+        res.status(500).json({ message: "Deposit failed.", error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+};
+
+
+// =============================================
+// ✅ NEW: Withdraw Funds (Added)
+// =============================================
+export const withdrawal = async (req, res) => {
+    const userId = req.user.id; // From authMiddleware
+    const { accountNumber, amount } = req.body;
+
+    // --- Basic Validation ---
+    const withdrawalAmount = parseFloat(amount);
+    if (!accountNumber || !amount || isNaN(withdrawalAmount) || withdrawalAmount <= 0) {
+        return res.status(400).json({ message: "Valid account number and positive amount are required." });
+    }
+
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // --- Find Account & Verify Ownership/Status/Balance ---
+        const findAccountSql = "SELECT id, user_id, status, balance FROM accounts WHERE account_number = ?";
+        const [accounts] = await connection.query(findAccountSql, [accountNumber]);
+
+        if (accounts.length === 0) {
+            await connection.rollback();
+            connection.release();
+            return res.status(404).json({ message: "Account not found." });
+        }
+        const account = accounts[0];
+        const accountId = account.id;
+        const currentBalance = parseFloat(account.balance);
+
+        if (account.user_id !== userId) {
+            await connection.rollback();
+            connection.release();
+            return res.status(403).json({ message: "Access denied. Account does not belong to user." });
+        }
+        if (account.status !== 'active') {
+             await connection.rollback();
+             connection.release();
+             return res.status(400).json({ message: `Account status is '${account.status}'. Cannot withdraw.` });
+        }
+        // Check sufficient funds
+        if (currentBalance < withdrawalAmount) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ message: "Insufficient balance." });
+        }
+
+        // --- Perform Withdrawal Update ---
+        // Include balance check in WHERE clause for extra safety against race conditions
+        const withdrawSql = "UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?";
+        const [withdrawResult] = await connection.query(withdrawSql, [withdrawalAmount, accountId, withdrawalAmount]);
+
+        if (withdrawResult.affectedRows === 0) {
+             // This could happen if balance check failed due to race condition
+             await connection.rollback();
+             connection.release();
+             console.warn(`Withdrawal conflict for Account ${accountId}, Amount: ${withdrawalAmount}`);
+             return res.status(409).json({ message: "Withdrawal conflict. Please try again." }); // 409 Conflict
+        }
+
+
+        // --- Log the Withdrawal Transaction ---
+        const logSql = `
+            INSERT INTO transactions (type, amount, status, account_id, description)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        await connection.query(logSql, ['withdrawal', withdrawalAmount, 'completed', accountId, 'Customer withdrawal']);
+
+        // --- Commit Transaction ---
+        await connection.commit();
+
+        console.log(`✅ Withdrawal successful: Account ${accountNumber}, Amount: ${withdrawalAmount}`);
+        // Optionally fetch and return the new balance
+        const [updatedAccount] = await connection.query("SELECT balance FROM accounts WHERE id = ?", [accountId]);
+        res.json({ message: "Withdrawal successful.", newBalance: updatedAccount[0]?.balance });
+
+    } catch (err) {
+        console.error("❌ Withdrawal failed:", err);
+        if (connection) await connection.rollback();
+        res.status(500).json({ message: "Withdrawal failed.", error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
 };

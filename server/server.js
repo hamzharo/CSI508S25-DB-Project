@@ -11,7 +11,7 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import accountRoutes from "./routes/accountRoutes.js";
-// import branchRoutes from "./routes/branchRoutes.js";
+import branchRoutes from "./routes/branchRoutes.js";
 // import supportRoutes from "./routes/supportRoutes.js";
 // import fraudRoutes from "./routes/fraudRoutes.js";
 
@@ -38,10 +38,9 @@ app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/accounts", accountRoutes);
-// app.use("/api/branches", branchRoutes);
+app.use("/api/branches", branchRoutes);
 // app.use("/api/support", supportRoutes);
 // app.use("/api/fraud", fraudRoutes);
-// app.use("/api/accounts", accountRoutes);
 
 app.get("/api", (req, res) =>{
   res.json({message:"Welcome to the Online Bank Management API!"});

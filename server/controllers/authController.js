@@ -222,3 +222,165 @@ export const verifyEmailToken = async (req, res) => { // <-- Added async
     return res.status(500).json({ message: "Error verifying email token." });
   }
 }; // End verifyEmailToken function
+
+
+
+// =============================================
+//Forgot Password (Request Reset Token)
+// =============================================
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+      return res.status(400).json({ message: "Email address is required." });
+  }
+  // Optional: Add stricter email format validation
+
+  try {
+      // 1. Find user by email
+      const findUserSql = "SELECT id, email, status FROM users WHERE email = ?";
+      const [users] = await pool.query(findUserSql, [email]);
+
+      // IMPORTANT: ALWAYS return a generic success message even if user not found
+      // This prevents attackers from guessing valid email addresses (email enumeration).
+      if (users.length === 0) {
+          console.log(`Password reset requested for non-existent email: ${email}`);
+          return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      const user = users[0];
+
+      // Optional: Prevent password reset for non-active users?
+      // if (user.status !== 'active') {
+      //     console.log(`Password reset requested for inactive user: ${email}, Status: ${user.status}`);
+      //     return res.json({ message: "If an account with that email exists and is active, a password reset link has been sent." });
+      // }
+
+      // 2. Generate password reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+
+      // 3. Set token expiry (e.g., 15 minutes from now)
+      const resetTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      // 4. Store token and expiry in the database for the user
+      const updateTokenSql = `
+          UPDATE users SET
+              password_reset_token = ?,
+              password_reset_expires = ?,
+              updated_at = NOW()
+          WHERE id = ?
+      `;
+      await pool.query(updateTokenSql, [resetToken, resetTokenExpiry, user.id]);
+      console.log(`Password reset token generated for user ID: ${user.id}`);
+
+      // 5. Send the password reset email
+      // Ensure EMAIL_USER and EMAIL_PASS are set in .env
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+           console.error(" Email credentials missing. Cannot send password reset email.");
+           // Still return generic success to user, but log server error
+           return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      // Use a different path for password reset on the frontend
+      const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+      console.log(` Attempting to send password reset email to: ${email}`);
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+      });
+      const mailOptions = {
+        from: `"Online Bank" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Password Reset Request - Online Bank",
+        text: `You requested a password reset for your Online Bank account.\n\nPlease click the following link to reset your password:\n\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you did not request this, please ignore this email.`,
+        html: `<p>You requested a password reset for your Online Bank account.</p><p>Please click the link below to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p><p>This link will expire in <strong>15 minutes</strong>.</p><p>If you did not request this, please ignore this email.</p>`,
+      };
+
+      // Send mail (no need to await if we return generic success anyway)
+      transporter.sendMail(mailOptions, (mailErr, info) => {
+          if (mailErr) {
+              // Log error server-side, but don't expose failure to user
+              console.error(" Error sending password reset email:", mailErr);
+          } else {
+              console.log(" Password reset email sent:", info.response);
+          }
+      });
+
+      // 6. Return generic success response
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+
+  } catch (err) {
+      console.error(" Error during forgot password process:", err);
+      // Return a generic error message in case of unexpected issues
+      res.status(500).json({ message: "An error occurred while processing your request." });
+  }
+};
+
+
+// =============================================
+// Reset Password (Using Token)
+// =============================================
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  // Validation
+  if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required." });
+  }
+  // Add password strength validation if desired
+  if (newPassword.length < 6) { // Example minimum length
+      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+  }
+
+  try {
+      // 1. Find user by valid, non-expired reset token
+      const findTokenSql = `
+          SELECT id
+          FROM users
+          WHERE password_reset_token = ?
+            AND password_reset_expires > NOW()
+      `;
+      const [users] = await pool.query(findTokenSql, [token]);
+
+      if (users.length === 0) {
+          console.log(`Password reset attempt with invalid or expired token: ${token.substring(0,10)}...`);
+          return res.status(400).json({ message: "Password reset link is invalid or has expired." });
+      }
+
+      const userId = users[0].id;
+
+      // 2. Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // 3. Update the user's password and clear the reset token fields
+      const updatePasswordSql = `
+          UPDATE users SET
+              password = ?,
+              password_reset_token = NULL,
+              password_reset_expires = NULL,
+              updated_at = NOW()
+          WHERE id = ?
+      `;
+      const [updateResult] = await pool.query(updatePasswordSql, [hashedPassword, userId]);
+
+      if (updateResult.affectedRows === 0) {
+           // Should not happen if user was found, but safety check
+           console.error(`Failed to update password for user ${userId} after token validation.`);
+           return res.status(500).json({ message: "Error resetting password." });
+      }
+
+      console.log(` Password successfully reset for user ID: ${userId}`);
+
+      // Optional: Log the user in immediately by generating a new JWT? Or just confirm success.
+      res.json({ message: "Password has been reset successfully. You can now log in with your new password." });
+
+  } catch (err) {
+      console.error(" Error during password reset process:", err);
+      res.status(500).json({ message: "An error occurred while resetting your password." });
+  }
+};
+
+

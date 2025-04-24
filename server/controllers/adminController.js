@@ -22,17 +22,58 @@ export const getPendingUsers = async (req, res) => { // Added async
 
 
 // Get All Users (Selecting relevant fields)
+// export const getAllUsers = async (req, res) => { // Added async
+//   try {
+//     // Select columns relevant for an admin overview, exclude sensitive data like password hash
+//     const sql = "SELECT id, email, first_name, last_name, role, status, created_at, is_email_verified FROM users ORDER BY created_at DESC";
+//     const [results] = await pool.query(sql); // <-- Use pool.query
+//     res.json(results);
+//   } catch (err) {
+//     console.error(" Database error getting all users:", err);
+//     res.status(500).json({ message: "Error fetching users." });
+//   }
+// };
+
+// Get All Users (Selecting relevant fields) - WITH FILTERING BY BRANCH
 export const getAllUsers = async (req, res) => { // Added async
   try {
-    // Select columns relevant for an admin overview, exclude sensitive data like password hash
-    const sql = "SELECT id, email, first_name, last_name, role, status, created_at, is_email_verified FROM users ORDER BY created_at DESC";
-    const [results] = await pool.query(sql); // <-- Use pool.query
+    // --- Filtering Logic ---
+    const { branchId } = req.query; // Get optional branchId filter
+
+    let sql = `
+        SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.status, u.created_at, u.is_email_verified, u.branch_id, b.name as branch_name
+        FROM users u
+        LEFT JOIN branches b ON u.branch_id = b.id
+        `; // Select relevant columns and join to get branch name
+    const queryParams = [];
+
+    if (branchId) {
+        const branchIdInt = parseInt(branchId);
+        if (!isNaN(branchIdInt)) {
+            sql += " WHERE u.branch_id = ?";
+            queryParams.push(branchIdInt);
+        } else if (branchId.toLowerCase() === 'null' || branchId.toLowerCase() === 'unassigned') {
+             sql += " WHERE u.branch_id IS NULL";
+             // No parameter needed for IS NULL
+        } else {
+            console.warn(`Invalid branchId filter ignored: ${branchId}`);
+            // Ignore invalid filter, return all users
+        }
+    }
+
+    sql += " ORDER BY u.created_at DESC"; // Add ordering
+
+    console.log("Executing SQL:", pool.format(sql, queryParams));
+    const [results] = await pool.query(sql, queryParams); // <-- Use pool.query
     res.json(results);
+
   } catch (err) {
     console.error(" Database error getting all users:", err);
     res.status(500).json({ message: "Error fetching users." });
   }
 };
+
+
 
 
 // Approve User and Create Account ---

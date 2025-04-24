@@ -15,8 +15,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating branches table:", err.message);
-//     else console.log("✅ Branches table ready");
+//     if (err) console.error(" Error creating branches table:", err.message);
+//     else console.log("Branches table ready");
 //   });
 // };
 
@@ -30,11 +30,11 @@ import db from "../config/db.js";
 //   `;
 //   db.query(sql, (err) => {
 //      if (err && err.code !== 'ER_FK_DUP_NAME' && err.code !== 'ER_DUP_KEYNAME') { // Ignore errors if FK already exists
-//         console.error("❌ Error adding foreign key to branches table (manager_id):", err.message);
+//         console.error(" Error adding foreign key to branches table (manager_id):", err.message);
 //     } else if (!err) {
-//         console.log("✅ Foreign key branches(manager_id) -> users(id) added/verified.");
+//         console.log(" Foreign key branches(manager_id) -> users(id) added/verified.");
 //     } else {
-//         console.log("ℹ️ Foreign key branches(manager_id) -> users(id) likely already exists.");
+//         console.log("ℹ Foreign key branches(manager_id) -> users(id) likely already exists.");
 //     }
 //   });
 // };

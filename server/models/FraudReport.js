@@ -25,8 +25,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating fraud_reports table:", err.message);
-//     else console.log("✅ Fraud Reports table ready");
+//     if (err) console.error(" Error creating fraud_reports table:", err.message);
+//     else console.log(" Fraud Reports table ready");
 //   });
 // };
 

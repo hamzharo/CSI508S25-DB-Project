@@ -20,7 +20,7 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/login", login);
 
-// ✅ NEW Route for handling token verification from email link
+//  NEW Route for handling token verification from email link
 router.post("/verify-token", verifyEmailToken); // <-- ADD this line
 
 export default router;

@@ -50,7 +50,7 @@ export const getUserProfile = async (req, res) => { // Added async
     res.json(response);
 
   } catch (err) {
-    console.error("❌ Database error getting user profile:", err);
+    console.error(" Database error getting user profile:", err);
     res.status(500).json({ message: "Error fetching user profile." });
   }
 };
@@ -102,7 +102,7 @@ export const updateUserProfile = async (req, res) => { // Added async
     res.json({ message: "Profile updated successfully." });
 
   } catch (err) {
-    console.error("❌ Database error updating user profile:", err);
+    console.error(" Database error updating user profile:", err);
     // Check for specific errors like duplicate entries if constraints exist (e.g., unique phone)
     if (err.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({ message: "Update failed. Duplicate value detected (e.g., email or phone)." });

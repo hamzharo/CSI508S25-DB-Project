@@ -13,7 +13,7 @@ const adminMiddleware = (req, res, next) => {
     next();
   } else {
     // User is not logged in, not an admin, or role info is missing
-    console.warn(`⚠️ Forbidden access attempt to admin route by user ID: ${req.user?.id} with role: ${req.user?.role}`);
+    console.warn(` Forbidden access attempt to admin route by user ID: ${req.user?.id} with role: ${req.user?.role}`);
     res.status(403).json({ message: 'Access forbidden. Admin privileges required.' });
   }
 
@@ -27,11 +27,11 @@ const adminMiddleware = (req, res, next) => {
   const sql = "SELECT role FROM users WHERE id = ?";
   db.query(sql, [userId], (err, results) => {
       if (err) {
-          console.error("❌ Database error checking admin role:", err);
+          console.error(" Database error checking admin role:", err);
           return res.status(500).json({ message: 'Error verifying user role.' });
       }
       if (results.length === 0 || results[0].role !== 'admin') {
-          console.warn(`⚠️ Forbidden access attempt to admin route by user ID: ${userId}. Role in DB: ${results[0]?.role}`);
+          console.warn(` Forbidden access attempt to admin route by user ID: ${userId}. Role in DB: ${results[0]?.role}`);
           return res.status(403).json({ message: 'Access forbidden. Admin privileges required.' });
       }
       // Role verified from DB, proceed

@@ -14,8 +14,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating transactions table:", err.message);
-//     else console.log("✅ Transactions table ready");
+//     if (err) console.error(" Error creating transactions table:", err.message);
+//     else console.log(" Transactions table ready");
 //   });
 // };
 

@@ -32,14 +32,14 @@ export const createFraudReport = async (req, res) => {
         ]);
 
         const newReportId = result.insertId;
-        console.log(`✅ Fraud report created by User ${customerId} with ID: ${newReportId}`);
+        console.log(` Fraud report created by User ${customerId} with ID: ${newReportId}`);
 
         // Fetch the created report to return it
         const [newReport] = await pool.query("SELECT * FROM fraud_reports WHERE id = ?", [newReportId]);
         res.status(201).json(newReport[0]);
 
     } catch (err) {
-        console.error("❌ Database error creating fraud report:", err);
+        console.error(" Database error creating fraud report:", err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              return res.status(400).json({ message: "Invalid related account or transaction ID provided." });
         }
@@ -67,7 +67,7 @@ export const getMyFraudReports = async (req, res) => {
         const [reports] = await pool.query(sql, [customerId]);
         res.json(reports);
     } catch (err) {
-        console.error("❌ Database error getting customer fraud reports:", err);
+        console.error(" Database error getting customer fraud reports:", err);
         res.status(500).json({ message: "Error fetching fraud reports." });
     }
 };
@@ -105,7 +105,7 @@ export const getAllFraudReportsAdmin = async (req, res) => {
         const [reports] = await pool.query(sql);
         res.json(reports);
     } catch (err) {
-        console.error("❌ Database error getting all fraud reports (admin):", err);
+        console.error("Database error getting all fraud reports (admin):", err);
         res.status(500).json({ message: "Error fetching fraud reports." });
     }
 };
@@ -141,7 +141,7 @@ export const getFraudReportByIdAdmin = async (req, res) => {
         }
         res.json(reports[0]);
     } catch (err) {
-        console.error(`❌ Database error getting fraud report ${reportId} (admin):`, err);
+        console.error(` Database error getting fraud report ${reportId} (admin):`, err);
         res.status(500).json({ message: "Error fetching fraud report details." });
     }
 };
@@ -195,13 +195,13 @@ export const updateFraudReportAdmin = async (req, res) => {
             return res.status(404).json({ message: "Fraud report not found or no changes made." });
         }
 
-        console.log(`✅ Fraud report ${reportId} updated by Admin ${adminUserId}`);
+        console.log(` Fraud report ${reportId} updated by Admin ${adminUserId}`);
         // Fetch updated report data to return
         const [updatedReport] = await pool.query("SELECT * FROM fraud_reports WHERE id = ?", [reportId]);
         res.json(updatedReport[0]);
 
     } catch (err) {
-        console.error(`❌ Database error updating fraud report ${reportId} (admin):`, err);
+        console.error(` Database error updating fraud report ${reportId} (admin):`, err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              return res.status(400).json({ message: "Update failed. Invalid assigned admin ID provided." });
         }

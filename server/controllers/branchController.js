@@ -30,7 +30,7 @@ export const createBranch = async (req, res) => {
         ]);
 
         const newBranchId = result.insertId;
-        console.log(`✅ Branch created successfully with ID: ${newBranchId}`);
+        console.log(` Branch created successfully with ID: ${newBranchId}`);
 
         // Fetch the created branch to return it
         const [newBranch] = await pool.query("SELECT * FROM branches WHERE id = ?", [newBranchId]);
@@ -38,7 +38,7 @@ export const createBranch = async (req, res) => {
         res.status(201).json(newBranch[0]);
 
     } catch (err) {
-        console.error("❌ Database error creating branch:", err);
+        console.error(" Database error creating branch:", err);
         // Handle potential foreign key errors for manager_id more gracefully
         if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              return res.status(400).json({ message: "Invalid manager ID provided. User does not exist." });
@@ -66,7 +66,7 @@ export const getAllBranches = async (req, res) => {
         const [branches] = await pool.query(sql);
         res.json(branches);
     } catch (err) {
-        console.error("❌ Database error getting all branches:", err);
+        console.error(" Database error getting all branches:", err);
         res.status(500).json({ message: "Error fetching branches." });
     }
 };
@@ -100,7 +100,7 @@ export const getBranchById = async (req, res) => {
         }
         res.json(branches[0]);
     } catch (err) {
-        console.error(`❌ Database error getting branch ${branchId}:`, err);
+        console.error(` Database error getting branch ${branchId}:`, err);
         res.status(500).json({ message: "Error fetching branch details." });
     }
 };
@@ -145,7 +145,7 @@ export const updateBranch = async (req, res) => {
                  return res.status(400).json({ message: "Invalid manager ID provided. User is not an admin or does not exist." });
             }
         } catch (checkErr) {
-             console.error("❌ Error checking manager ID:", checkErr);
+             console.error(" Error checking manager ID:", checkErr);
              return res.status(500).json({ message: "Error verifying manager ID." });
         }
     }
@@ -161,13 +161,13 @@ export const updateBranch = async (req, res) => {
             return res.status(404).json({ message: "Branch not found or no changes made." });
         }
 
-        console.log(`✅ Branch updated successfully for ID: ${branchId}`);
+        console.log(` Branch updated successfully for ID: ${branchId}`);
         // Fetch updated branch data to return
         const [updatedBranch] = await pool.query("SELECT * FROM branches WHERE id = ?", [branchId]);
         res.json(updatedBranch[0]);
 
     } catch (err) {
-        console.error(`❌ Database error updating branch ${branchId}:`, err);
+        console.error(` Database error updating branch ${branchId}:`, err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              return res.status(400).json({ message: "Update failed. Invalid manager ID provided." });
         }

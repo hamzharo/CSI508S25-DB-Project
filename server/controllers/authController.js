@@ -12,7 +12,7 @@ dotenv.config();
 // export const sendVerificationEmail = async (req, res) => { /* ... */ };
 
 // =============================================
-// ✅ Register User Function (Refactored for Pool)
+//  Register User Function (Refactored for Pool)
 // =============================================
 export const register = async (req, res) => { // <-- Added async
   // 1. Destructure fields
@@ -59,11 +59,11 @@ export const register = async (req, res) => { // <-- Added async
 
     // 8. Execute Insert Query using the pool
     const [result] = await pool.query(insertSql, values); // <-- Use pool.query with await
-    console.log(`✅ User registered successfully with ID: ${result.insertId}`);
+    console.log(` User registered successfully with ID: ${result.insertId}`);
 
     // 9. Send Verification Email (nodemailer part remains largely the same)
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn("⚠️ Email credentials missing. Skipping verification email.");
+      console.warn(" Email credentials missing. Skipping verification email.");
       return res.status(201).json({ message: "Registration successful. Email verification step skipped due to server config." });
     }
 
@@ -85,21 +85,21 @@ export const register = async (req, res) => { // <-- Added async
     // Send mail using async/await with nodemailer if preferred, or keep callback
     transporter.sendMail(mailOptions, (mailErr, info) => {
       if (mailErr) {
-        console.error("❌ Error sending verification email. Details:", mailErr);
+        console.error(" Error sending verification email. Details:", mailErr);
         // Still 201 as user was created, but inform about email failure
         return res.status(201).json({
           message: "Registration successful, but the verification email could not be sent. Please contact support.",
           error: "Failed to send verification email."
         });
       }
-      console.log("✅ Verification email sent:", info.response);
+      console.log(" Verification email sent:", info.response);
       res.status(201).json({
         message: "Registration successful! Please check your email inbox (and spam folder) to verify your account."
       });
     });
 
   } catch (err) { // <-- Catch errors from await blocks
-    console.error("❌ Error during registration process:", err);
+    console.error(" Error during registration process:", err);
     // Check for specific DB errors if needed (e.g., err.code === 'ER_DUP_ENTRY')
     res.status(500).json({ message: "Error processing registration." });
   }
@@ -129,7 +129,7 @@ export const login = async (req, res) => { // <-- Added async
       if (user.status === 'pending_email_verification') reason = 'Account not yet active. Please verify your email address first.';
       else if (user.status === 'pending_approval') reason = 'Account verification successful, but pending administrator approval.';
       else if (user.status === 'inactive' || user.status === 'blocked') reason = 'Account has been suspended or blocked. Please contact support.';
-      console.warn(`⚠️ Login attempt failed for inactive user: ${user.email}, Status: ${user.status}`);
+      console.warn(`Login attempt failed for inactive user: ${user.email}, Status: ${user.status}`);
       return res.status(403).json({ message: reason });
     }
     // --- End Status Check ---
@@ -154,7 +154,7 @@ export const login = async (req, res) => { // <-- Added async
     // Use await for jwt.sign if using a promise-based wrapper, or keep callback
     jwt.sign(payload, secret, options, (err, token) => {
       if (err) {
-        console.error('❌ Error signing JWT:', err);
+        console.error('Error signing JWT:', err);
         return res.status(500).json({ message: 'Error generating session.' });
       }
       res.json({
@@ -164,7 +164,7 @@ export const login = async (req, res) => { // <-- Added async
     });
 
   } catch (err) { // <-- Catch errors from await blocks
-    console.error("❌ Error during login process:", err);
+    console.error("Error during login process:", err);
     res.status(500).json({ message: "Error logging in." });
   }
 }; // End login function
@@ -210,15 +210,15 @@ export const verifyEmailToken = async (req, res) => { // <-- Added async
     const [updateResult] = await pool.query(updateSql, [userId]); // <-- Use pool.query
 
     if (updateResult.affectedRows === 0) {
-      console.warn(`⚠️ User ${userId} status update affected 0 rows during verification...`);
+      console.warn(` User ${userId} status update affected 0 rows during verification...`);
       return res.status(400).json({ message: "Could not verify email at this time." });
     }
 
-    console.log(`✅ Email verified for user ID: ${userId}. Status set to pending_approval.`);
+    console.log(` Email verified for user ID: ${userId}. Status set to pending_approval.`);
     res.json({ message: "Email verified successfully! Your account is now pending administrator approval." });
 
   } catch (err) { // <-- Catch errors from await blocks
-    console.error("❌ Error during email token verification:", err);
+    console.error(" Error during email token verification:", err);
     return res.status(500).json({ message: "Error verifying email token." });
   }
 }; // End verifyEmailToken function

@@ -3,7 +3,8 @@ import express from "express";
 import { getAllUsers,
      updateUserBalance,
      getPendingUsers, 
-     approveUser  } from "../controllers/adminController.js";
+     approveUser,
+     updateUserAdmin } from "../controllers/adminController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
@@ -49,6 +50,14 @@ router.put(
     authMiddleware,
     adminMiddleware,
     updateUserBalance
+);
+
+// --- Admin Route for Updating User ---
+router.put(
+    "/users/:userId", // Matches PUT /api/admin/users/123
+    authMiddleware,
+    adminMiddleware,
+    updateUserAdmin // Handles updating branch, potentially role/status later
 );
 
 

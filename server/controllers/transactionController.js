@@ -35,7 +35,7 @@ export const getTransactions = async (req, res) => { // Added async
     res.json(transactions);
 
   } catch (err) {
-    console.error("❌ Database error getting transactions:", err);
+    console.error(" Database error getting transactions:", err);
     res.status(500).json({ message: "Error fetching transaction history." });
   }
 };
@@ -152,10 +152,10 @@ export const transferFunds = async (req, res) => { // Added async
     res.json({ message: "Transaction successful" });
 
   } catch (err) {
-    console.error("❌ Transaction failed:", err);
+    console.error(" Transaction failed:", err);
     if (connection) {
       try { await connection.rollback(); console.log("Transaction rolled back."); }
-      catch (rollbackError) { console.error("❌ Error rolling back transaction:", rollbackError); }
+      catch (rollbackError) { console.error(" Error rolling back transaction:", rollbackError); }
     }
     res.status(500).json({ message: "Transaction failed.", error: err.message });
   } finally {
@@ -165,7 +165,7 @@ export const transferFunds = async (req, res) => { // Added async
 
 
 // =============================================
-// ✅ NEW: Deposit Funds (Added)
+//  NEW: Deposit Funds (Added)
 // =============================================
 export const deposit = async (req, res) => {
     const userId = req.user.id; // From authMiddleware
@@ -221,13 +221,13 @@ export const deposit = async (req, res) => {
         // --- Commit Transaction ---
         await connection.commit();
 
-        console.log(`✅ Deposit successful: Account ${accountNumber}, Amount: ${depositAmount}`);
+        console.log(` Deposit successful: Account ${accountNumber}, Amount: ${depositAmount}`);
         // Optionally fetch and return the new balance
         const [updatedAccount] = await connection.query("SELECT balance FROM accounts WHERE id = ?", [accountId]);
         res.json({ message: "Deposit successful.", newBalance: updatedAccount[0]?.balance });
 
     } catch (err) {
-        console.error("❌ Deposit failed:", err);
+        console.error(" Deposit failed:", err);
         if (connection) await connection.rollback();
         res.status(500).json({ message: "Deposit failed.", error: err.message });
     } finally {
@@ -237,7 +237,7 @@ export const deposit = async (req, res) => {
 
 
 // =============================================
-// ✅ NEW: Withdraw Funds (Added)
+//  NEW: Withdraw Funds (Added)
 // =============================================
 export const withdrawal = async (req, res) => {
     const userId = req.user.id; // From authMiddleware
@@ -308,13 +308,13 @@ export const withdrawal = async (req, res) => {
         // --- Commit Transaction ---
         await connection.commit();
 
-        console.log(`✅ Withdrawal successful: Account ${accountNumber}, Amount: ${withdrawalAmount}`);
+        console.log(` Withdrawal successful: Account ${accountNumber}, Amount: ${withdrawalAmount}`);
         // Optionally fetch and return the new balance
         const [updatedAccount] = await connection.query("SELECT balance FROM accounts WHERE id = ?", [accountId]);
         res.json({ message: "Withdrawal successful.", newBalance: updatedAccount[0]?.balance });
 
     } catch (err) {
-        console.error("❌ Withdrawal failed:", err);
+        console.error(" Withdrawal failed:", err);
         if (connection) await connection.rollback();
         res.status(500).json({ message: "Withdrawal failed.", error: err.message });
     } finally {

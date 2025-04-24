@@ -15,7 +15,7 @@ export const getPendingUsers = async (req, res) => { // Added async
     const [pendingUsers] = await pool.query(sql); // <-- Use pool.query
     res.json(pendingUsers);
   } catch (err) {
-    console.error("❌ Database error getting pending users:", err);
+    console.error(" Database error getting pending users:", err);
     res.status(500).json({ message: "Error fetching pending users." });
   }
 };
@@ -29,13 +29,13 @@ export const getAllUsers = async (req, res) => { // Added async
     const [results] = await pool.query(sql); // <-- Use pool.query
     res.json(results);
   } catch (err) {
-    console.error("❌ Database error getting all users:", err);
+    console.error(" Database error getting all users:", err);
     res.status(500).json({ message: "Error fetching users." });
   }
 };
 
 
-// --- NEW: Approve User and Create Account ---
+// Approve User and Create Account ---
 export const approveUser = async (req, res) => { // Added async
   const { userId } = req.params; // Get userId from route parameter
 
@@ -115,11 +115,11 @@ export const approveUser = async (req, res) => { // Added async
     // 5. Commit the transaction
     await connection.commit();
 
-    console.log(`✅ Admin approved User ID: ${userIdInt}. Status set to active. Account ${accountNumber} created.`);
+    console.log(`Admin approved User ID: ${userIdInt}. Status set to active. Account ${accountNumber} created.`);
     res.json({ message: "User approved successfully and initial account created.", accountNumber: accountNumber });
 
   } catch (err) {
-    console.error(`❌ Error approving user ${userIdInt}:`, err);
+    console.error(` Error approving user ${userIdInt}:`, err);
     // Rollback transaction if an error occurs
     if (connection) {
       await connection.rollback();
@@ -134,11 +134,107 @@ export const approveUser = async (req, res) => { // Added async
   }
 };
 
+
+
+
+// =============================================
+//  NEW: Update User Details (Admin - including branch assignment)
+// =============================================
+export const updateUserAdmin = async (req, res) => {
+    // Admin performing the action (from token)
+    // const performingAdminId = req.user.id;
+
+    // User being updated (from URL param)
+    const { userId } = req.params;
+    const userIdInt = parseInt(userId);
+
+    // Fields that can be updated by admin (from request body)
+    // For now, focusing on branch_id. Can add role, status later.
+    const { branchId } = req.body; // Expecting 'branchId' (can be number or null)
+
+    // --- Validation ---
+    if (isNaN(userIdInt)) {
+        return res.status(400).json({ message: "Invalid User ID provided in URL." });
+    }
+
+    // Validate branchId format if provided
+    let branchIdValue = null; // Default to null if not provided or explicitly set to null
+    if (branchId !== undefined) {
+        if (branchId === null) {
+            branchIdValue = null; // Allow unassigning
+        } else {
+            branchIdValue = parseInt(branchId);
+            if (isNaN(branchIdValue)) {
+                return res.status(400).json({ message: "Invalid Branch ID format provided in body. Must be a number or null." });
+            }
+        }
+    } else {
+        // If branchId wasn't sent in the body at all
+         return res.status(400).json({ message: "No update information provided (expected 'branchId')." });
+    }
+
+    try {
+        // --- Pre-checks (Optional but Recommended) ---
+        // 1. Verify the target user exists
+        const [userCheck] = await pool.query("SELECT id FROM users WHERE id = ?", [userIdInt]);
+        if (userCheck.length === 0) {
+            return res.status(404).json({ message: `User with ID ${userIdInt} not found.` });
+        }
+
+        // 2. If assigning a branch (branchIdValue is not null), verify the branch exists
+        if (branchIdValue !== null) {
+            const [branchCheck] = await pool.query("SELECT id FROM branches WHERE id = ?", [branchIdValue]);
+            if (branchCheck.length === 0) {
+                return res.status(404).json({ message: `Branch with ID ${branchIdValue} not found. Cannot assign user.` });
+            }
+        }
+        // --- End Pre-checks ---
+
+
+        // --- Prepare Update ---
+        const updateFields = {
+            branch_id: branchIdValue, // Set to the validated number or null
+            updated_at: new Date()
+        };
+        // Add other fields here later if needed (e.g., status, role)
+        // if (status) updateFields.status = status;
+        // if (role) updateFields.role = role;
+
+
+        // --- Execute Update ---
+        const sql = "UPDATE users SET ? WHERE id = ?";
+        const [result] = await pool.query(sql, [updateFields, userIdInt]);
+
+        if (result.affectedRows === 0) {
+            // Should have been caught by userCheck, but safety net
+            return res.status(404).json({ message: `User with ID ${userIdInt} not found during update.` });
+        }
+
+        console.log(` Admin updated details for User ID: ${userIdInt}. Branch ID set to: ${branchIdValue}`);
+
+        // Fetch updated user data (excluding sensitive info) to return
+        const [updatedUser] = await pool.query(
+            "SELECT id, email, first_name, last_name, role, status, branch_id, updated_at FROM users WHERE id = ?",
+             [userIdInt]
+        );
+        res.json({ message: "User details updated successfully.", user: updatedUser[0] });
+
+    } catch (err) {
+        console.error(` Database error updating user ${userIdInt} (admin):`, err);
+        // Handle potential foreign key constraint errors if pre-check fails somehow
+        if (err.code === 'ER_NO_REFERENCED_ROW_2' && err.message.includes('fk_user_branch')) {
+             return res.status(400).json({ message: "Invalid Branch ID provided." });
+        }
+        res.status(500).json({ message: "Error updating user details.", error: err.message });
+    }
+};
+
+
 // Update User Balance (OBSOLETE - Balance is on accounts table)
 // Keeping the function structure refactored but commenting out the core logic
 // This endpoint should likely be removed or repurposed for other admin actions on users.
 export const updateUserBalance = async (req, res) => { // Added async
-    console.warn("⚠️ WARNING: updateUserBalance controller called - this function is obsolete as balance resides in the 'accounts' table.");
+    console.warn(" WARNING: updateUserBalance controller called - this function is obsolete as balance resides in the 'accounts' table.");
     // const { userId, balance } = req.body;
 
     return res.status(400).json({ message: "This function (updateUserBalance) is obsolete and should not be used. Balance is managed in the 'accounts' table." });
@@ -154,10 +250,12 @@ export const updateUserBalance = async (req, res) => { // Added async
         res.json({ message: "User balance update attempted (OBSOLETE FUNCTION)." });
 
     } catch (err) {
-        console.error("❌ Database error attempting obsolete balance update:", err);
+        console.error(" Database error attempting obsolete balance update:", err);
         res.status(500).json({ message: "Error attempting obsolete balance update." });
     }
     */
+
+
 };
 
 // --- ADD NEW ADMIN CONTROLLER FUNCTIONS HERE LATER ---

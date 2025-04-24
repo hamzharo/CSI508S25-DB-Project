@@ -27,8 +27,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating support_tickets table:", err.message);
-//     else console.log("✅ Support Tickets table ready");
+//     if (err) console.error(" Error creating support_tickets table:", err.message);
+//     else console.log(" Support Tickets table ready");
 //   });
 // };
 

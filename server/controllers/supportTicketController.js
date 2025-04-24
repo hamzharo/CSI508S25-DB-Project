@@ -33,14 +33,14 @@ export const createSupportTicket = async (req, res) => {
         ]);
 
         const newTicketId = result.insertId;
-        console.log(`✅ Support ticket created by User ${customerId} with ID: ${newTicketId}`);
+        console.log(` Support ticket created by User ${customerId} with ID: ${newTicketId}`);
 
         // Fetch the created ticket to return it
         const [newTicket] = await pool.query("SELECT * FROM support_tickets WHERE id = ?", [newTicketId]);
         res.status(201).json(newTicket[0]);
 
     } catch (err) {
-        console.error("❌ Database error creating support ticket:", err);
+        console.error(" Database error creating support ticket:", err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              // Handle cases where related_account_id or related_transaction_id is invalid
              return res.status(400).json({ message: "Invalid related account or transaction ID provided." });
@@ -68,7 +68,7 @@ export const getMySupportTickets = async (req, res) => {
         const [tickets] = await pool.query(sql, [customerId]);
         res.json(tickets);
     } catch (err) {
-        console.error("❌ Database error getting customer support tickets:", err);
+        console.error(" Database error getting customer support tickets:", err);
         res.status(500).json({ message: "Error fetching support tickets." });
     }
 };
@@ -77,39 +77,85 @@ export const getMySupportTickets = async (req, res) => {
 // --- Admin Functions ---
 
 /**
- * @desc    Get all support tickets (for Admin view)
+ * @desc    Get all support tickets (for Admin view) - WITH FILTERING
  * @route   GET /api/admin/support/tickets
  * @access  Private (Admin Only)
  */
 export const getAllSupportTicketsAdmin = async (req, res) => {
-    // Add filtering/pagination later (e.g., by status, assigned admin)
+    // --- Filtering Logic ---
+    const { status, priority } = req.query; // Get potential filters from query string ?status=open&priority=high
+
+    let baseSql = `
+        SELECT
+            st.id, st.subject, st.description, st.status, st.priority, st.created_at, st.updated_at, st.resolved_at, st.closed_at,
+            CONCAT(cust.first_name, ' ', cust.last_name) as customer_name, cust.email as customer_email,
+            st.assigned_admin_id, CONCAT(adm.first_name, ' ', adm.last_name) as assigned_admin_name
+        FROM support_tickets st
+        JOIN users cust ON st.customer_id = cust.id
+        LEFT JOIN users adm ON st.assigned_admin_id = adm.id
+    `; // Select specific fields
+
+    const whereClauses = [];
+    const queryParams = [];
+
+    if (status) {
+        // Basic validation for status enum (optional but good practice)
+        const validStatuses = ['open', 'in_progress', 'resolved', 'closed', 'reopened'];
+        if (validStatuses.includes(status.toLowerCase())) {
+            whereClauses.push("st.status = ?");
+            queryParams.push(status.toLowerCase());
+        } else {
+             console.warn(`Invalid status filter provided: ${status}`);
+             // Optionally return an error or just ignore the invalid filter
+        }
+    }
+
+    if (priority) {
+         // Basic validation for priority enum
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+         if (validPriorities.includes(priority.toLowerCase())) {
+            whereClauses.push("st.priority = ?");
+            queryParams.push(priority.toLowerCase());
+        } else {
+             console.warn(`Invalid priority filter provided: ${priority}`);
+        }
+    }
+
+    if (whereClauses.length > 0) {
+        baseSql += " WHERE " + whereClauses.join(" AND ");
+    }
+
+    // --- Ordering Logic ---
+    baseSql += `
+        ORDER BY
+            CASE st.status
+                WHEN 'open' THEN 1
+                WHEN 'reopened' THEN 2
+                WHEN 'in_progress' THEN 3
+                WHEN 'resolved' THEN 4
+                WHEN 'closed' THEN 5
+                ELSE 6
+            END,
+            CASE st.priority
+                WHEN 'urgent' THEN 1
+                WHEN 'high' THEN 2
+                WHEN 'medium' THEN 3
+                WHEN 'low' THEN 4
+                ELSE 5
+            END,
+            st.updated_at DESC, st.created_at DESC
+    `; // Enhanced Ordering
+
     try {
-        const sql = `
-            SELECT
-                st.*,
-                CONCAT(cust.first_name, ' ', cust.last_name) as customer_name, cust.email as customer_email,
-                CONCAT(adm.first_name, ' ', adm.last_name) as assigned_admin_name
-            FROM support_tickets st
-            JOIN users cust ON st.customer_id = cust.id
-            LEFT JOIN users adm ON st.assigned_admin_id = adm.id
-            ORDER BY
-                CASE st.status
-                    WHEN 'open' THEN 1
-                    WHEN 'in_progress' THEN 2
-                    WHEN 'reopened' THEN 3
-                    WHEN 'resolved' THEN 4
-                    WHEN 'closed' THEN 5
-                    ELSE 6
-                END,
-                st.updated_at DESC, st.created_at DESC
-        `;
-        const [tickets] = await pool.query(sql);
+        console.log("Executing SQL:", pool.format(baseSql, queryParams)); // Log the final query for debugging
+        const [tickets] = await pool.query(baseSql, queryParams);
         res.json(tickets);
     } catch (err) {
-        console.error("❌ Database error getting all support tickets (admin):", err);
+        console.error(" Database error getting all support tickets (admin):", err);
         res.status(500).json({ message: "Error fetching support tickets." });
     }
-};
+}; // <-- End of getAllSupportTicketsAdmin function
+
 
 /**
  * @desc    Get a single support ticket by ID (for Admin view)
@@ -142,7 +188,7 @@ export const getSupportTicketByIdAdmin = async (req, res) => {
         }
         res.json(tickets[0]);
     } catch (err) {
-        console.error(`❌ Database error getting support ticket ${ticketId} (admin):`, err);
+        console.error(` Database error getting support ticket ${ticketId} (admin):`, err);
         res.status(500).json({ message: "Error fetching support ticket details." });
     }
 };
@@ -203,16 +249,67 @@ export const updateSupportTicketAdmin = async (req, res) => {
             return res.status(404).json({ message: "Support ticket not found or no changes made." });
         }
 
-        console.log(`✅ Support ticket ${ticketId} updated by Admin ${adminUserId}`);
+        console.log(`Support ticket ${ticketId} updated by Admin ${adminUserId}`);
         // Fetch updated ticket data to return
         const [updatedTicket] = await pool.query("SELECT * FROM support_tickets WHERE id = ?", [ticketId]);
         res.json(updatedTicket[0]);
 
     } catch (err) {
-        console.error(`❌ Database error updating support ticket ${ticketId} (admin):`, err);
+        console.error(`Database error updating support ticket ${ticketId} (admin):`, err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
              return res.status(400).json({ message: "Update failed. Invalid assigned admin ID provided." });
         }
         res.status(500).json({ message: "Error updating support ticket.", error: err.message });
     }
+};
+
+/**
+ * @desc    Delete a support ticket (Admin)
+ * @route   DELETE /api/admin/support/tickets/:id
+ * @access  Private (Admin Only)
+ */
+export const deleteSupportTicketAdmin = async (req, res) => {
+    const { id } = req.params;
+    const ticketId = parseInt(id);
+    const adminUserId = req.user.id;
+
+    if (isNaN(ticketId)) {
+        return res.status(400).json({ message: "Invalid ticket ID." });
+    }
+
+    try {
+        // Optional: Check if ticket exists and maybe if status is 'resolved' or 'closed' before deleting
+        const checkSql = "SELECT id, status FROM support_tickets WHERE id = ?";
+        const [tickets] = await pool.query(checkSql, [ticketId]);
+
+        if (tickets.length === 0) {
+            return res.status(404).json({ message: "Support ticket not found." });
+        }
+
+        // Optional Policy: Only allow deletion of closed/resolved tickets
+        // const ticketStatus = tickets[0].status;
+        // if (ticketStatus !== 'resolved' && ticketStatus !== 'closed') {
+        //     return res.status(400).json({ message: `Cannot delete ticket with status '${ticketStatus}'. Only resolved or closed tickets can be deleted.` });
+        // }
+
+        // Perform delete operation
+        const deleteSql = "DELETE FROM support_tickets WHERE id = ?";
+        const [result] = await pool.query(deleteSql, [ticketId]);
+
+        if (result.affectedRows === 0) {
+            // Should have been caught by the check above, but safety net
+            return res.status(404).json({ message: "Support ticket not found during delete attempt." });
+        }
+
+        console.log(` Support ticket ${ticketId} deleted by Admin ${adminUserId}`);
+        // Send 200 OK or 204 No Content on successful deletion
+        res.status(200).json({ message: "Support ticket deleted successfully." });
+        // Alternatively: res.status(204).send();
+
+    } catch (err) {
+        console.error(` Database error deleting support ticket ${ticketId} (admin):`, err);
+        // Handle potential foreign key constraint issues if other tables reference tickets
+        res.status(500).json({ message: "Error deleting support ticket.", error: err.message });
+    }
+
 };

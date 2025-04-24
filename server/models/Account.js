@@ -20,8 +20,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating accounts table:", err.message);
-//     else console.log("✅ Accounts table ready");
+//     if (err) console.error(" Error creating accounts table:", err.message);
+//     else console.log(" Accounts table ready");
 //   });
 // };
 

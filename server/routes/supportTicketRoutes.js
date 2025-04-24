@@ -5,7 +5,8 @@ import {
     getMySupportTickets,
     getAllSupportTicketsAdmin,
     getSupportTicketByIdAdmin,
-    updateSupportTicketAdmin
+    updateSupportTicketAdmin,
+    deleteSupportTicketAdmin 
 } from "../controllers/supportTicketController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
@@ -58,6 +59,14 @@ adminRouter.put(
     authMiddleware,
     adminMiddleware,
     updateSupportTicketAdmin
+);
+
+// DELETE route
+adminRouter.delete(
+    '/tickets/:id',         // DELETE /api/admin/support/tickets/:id
+    authMiddleware,
+    adminMiddleware,
+    deleteSupportTicketAdmin 
 );
 
 // Export both routers (or combine if preferred)

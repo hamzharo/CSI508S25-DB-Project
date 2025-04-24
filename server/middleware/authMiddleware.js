@@ -15,18 +15,18 @@ const authMiddleware = (req, res, next) => {
   console.log('Extracted Token:', token); // Log what was extracted
 
   if (!token) {
-    console.log('❌ Token extraction failed!'); // Log failure reason
+    console.log(' Token extraction failed!'); // Log failure reason
     return res.status(403).json({ message: "Access denied. No token provided." });
   }
 
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('✅ Token Verified. Decoded Payload:', decoded);
+    console.log(' Token Verified. Decoded Payload:', decoded);
     req.user = decoded; // Attach decoded user info to request object
     next(); // Proceed to the next middleware/controller
   } catch (error) {
-    console.error('❌ Token Verification Error:', error.message); // Log verification error
+    console.error(' Token Verification Error:', error.message); // Log verification error
     return res.status(401).json({ message: "Invalid token. Authentication failed." });
   }
 };

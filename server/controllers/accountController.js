@@ -37,7 +37,7 @@ export const getUserAccounts = async (req, res) => {
         res.json(accounts);
 
     } catch (err) {
-        console.error("❌ Database error getting user accounts:", err);
+        console.error(" Database error getting user accounts:", err);
         res.status(500).json({ message: "Error fetching account details." });
     }
 };

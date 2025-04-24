@@ -15,8 +15,8 @@ import db from "../config/db.js";
 //     ) ENGINE=InnoDB;
 //   `;
 //   db.query(sql, (err) => {
-//     if (err) console.error("❌ Error creating users table:", err.message);
-//     else console.log("✅ Users table ready");
+//     if (err) console.error(" Error creating users table:", err.message);
+//     else console.log(" Users table ready");
 //   });
 // };
 

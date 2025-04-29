@@ -1,34 +1,6 @@
 // src/features/authService.js
 import api from '../utils/api'; // Import the configured Axios instance
 
-// Note: The register and verify functions might be called directly from AuthContext now,
-// but keeping them here as separate service functions is also a valid pattern.
-
-// Original sendVerificationEmail might be useful for a "resend" feature
-// export const sendVerificationEmail = async (email) => {
-//   try {
-//     // Adjust URL to be relative to baseURL in api.js
-//     const response = await api.post(`/auth/send-verification-email`, { email }); // Pass email correctly as object
-//     return response.data;
-//   } catch (error) {
-//     console.error("AuthService: Sending verification email failed", error);
-//     return { error: error.response?.data?.message || "Something went wrong" };
-//   }
-// };
-
-// This function now likely lives primarily within the AuthContext verifyUserEmail function
-// export const verifyEmail = async (token) => {
-//   try {
-//     // Adjust URL
-//     const response = await api.post(`/auth/verify-token`, { token });
-//     return response.data;
-//   } catch (error) {
-//     console.error("AuthService: Verifying email failed", error);
-//     return { error: error.response?.data?.message || "Invalid or expired token" };
-//   }
-// };
-
-
 // Example of keeping registerUser here, though AuthContext also has a register function now.
 // Choose one place to keep the primary logic. If keeping here:
 export const registerUser = async (userData) => {

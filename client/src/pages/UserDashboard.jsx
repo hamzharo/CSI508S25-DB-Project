@@ -1,38 +1,3 @@
-// // client/src/pages/UserDashboard.jsx
-// // import React, { useEffect, useState } from "react";
-// import { useEffect, useState } from "react";
-// import { getUserProfile } from "../features/user";
-// import Navbar from "../components/Navbar";
-
-// export default function UserDashboard() {
-//   const [user, setUser] = useState(null);
-
-//   useEffect(() => {
-//     async function fetchProfile() {
-//       const profile = await getUserProfile();
-//       setUser(profile);
-//     }
-//     fetchProfile();
-//   }, []);
-
-//   return (
-//     <div>
-//       <Navbar />
-//       <div className="p-5">
-//         <h2 className="text-2xl font-bold">User Dashboard</h2>
-//         {user ? (
-//           <div className="mt-4">
-//             <p><strong>Name:</strong> {user.name}</p>
-//             <p><strong>Email:</strong> {user.email}</p>
-//             <p><strong>Balance:</strong> ${user.balance}</p>
-//           </div>
-//         ) : <p>Loading...</p>}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 // src/pages/UserDashboard.jsx
 //import React, { useState, useEffect, useContext } from 'react';
 import  { useState, useEffect, useContext } from 'react';
@@ -126,9 +91,11 @@ const UserDashboard = () => {
                                     <p className="text-2xl font-semibold">
                                         {formatCurrency(account.balance)}
                                     </p>
-                                    <p className={`text-sm ${account.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
-                                        Status: {account.status}
+                                
+                                    <p className={`text-sm ${account.account_status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+                                        Status: {account.account_status} {/* <-- Use account_status here */}
                                     </p>
+
                                 </CardContent>
                                 <CardFooter className="flex justify-between">
                                     {/* Placeholder for future actions */}
@@ -143,6 +110,7 @@ const UserDashboard = () => {
                         <p className="text-gray-600 md:col-span-2 lg:col-span-3">
                             You do not have any accounts yet. If this seems incorrect, please contact support.
                         </p>
+
                     )}
                 </div>
             )}
@@ -165,3 +133,4 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
+

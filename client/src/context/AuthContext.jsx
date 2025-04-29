@@ -115,10 +115,10 @@ export default function AuthProvider( {children} ) {
         isAdmin: user?.role === 'admin', // Safely check role
         login,
         register,
-        verifyUserEmail, // Expose email verification function
+      //  verifyUserEmail, // Expose email verification function
         logout,
         loading  // Let components know if initial auth check is happening
-    }), [user, token, loading, login, register, verifyUserEmail, logout]);
+    }), [user,/* token,*/ loading, login, register, /*verifyUserEmail,*/ logout]);
 
     return (
         <AuthContext.Provider value={value}>

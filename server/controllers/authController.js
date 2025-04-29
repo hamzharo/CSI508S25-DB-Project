@@ -1,12 +1,16 @@
 // server/controllers/authController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import pool from "../config/db.js"; // <--- Import the pool
+import pool from "../config/db.js"; 
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import crypto from 'crypto';
+// import {resendVerificationEmail} from "../controllers/authController.js";
+
 
 dotenv.config();
+// router.post("/resend-verification", resendVerificationEmail); 
+
 
 // Optional: Placeholder for potential "resend verification" feature
 // export const sendVerificationEmail = async (req, res) => { /* ... */ };
@@ -14,7 +18,7 @@ dotenv.config();
 // =============================================
 //  Register User Function (Refactored for Pool)
 // =============================================
-export const register = async (req, res) => { // <-- Added async
+export const register = async (req, res) => { 
   // 1. Destructure fields
   const {
     email, password, firstName, lastName, dob, citizenship, ssn, gender,
@@ -63,13 +67,13 @@ export const register = async (req, res) => { // <-- Added async
 
     // 9. Send Verification Email (nodemailer part remains largely the same)
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn(" Email credentials missing. Skipping verification email.");
+      console.warn("Email credentials missing. Skipping verification email.");
       return res.status(201).json({ message: "Registration successful. Email verification step skipped due to server config." });
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
     const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
-    console.log("📧 Attempting to send verification email to:", email);
+    console.log("Attempting to send verification email to:", email);
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -171,12 +175,16 @@ export const login = async (req, res) => { // <-- Added async
 
 
 // =============================================
-// ✅ Email Verification Token Handler (Refactored for Pool)
+// Email Verification Token Handler (Refactored for Pool)
 // =============================================
-export const verifyEmailToken = async (req, res) => { // <-- Added async
-  const { token } = req.body;
+//export const router.post("/verify-email", verifyEmailToken);
+export const verifyEmailToken = async (req, res) => {
+  const { token } = req.query;
+
+  console.log(`[verifyEmailToken] Received token from query: ${token ? token.substring(0,10)+'...' : 'MISSING'}`);
+
   if (!token) {
-    return res.status(400).json({ message: "Verification token is required." });
+    return res.status(400).json({ message: "Verification token misisng from request." });
   }
 
   try {
@@ -221,7 +229,7 @@ export const verifyEmailToken = async (req, res) => { // <-- Added async
     console.error(" Error during email token verification:", err);
     return res.status(500).json({ message: "Error verifying email token." });
   }
-}; // End verifyEmailToken function
+}; // End router.postfunction
 
 
 
@@ -281,7 +289,7 @@ export const forgotPassword = async (req, res) => {
            return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
       }
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174';
       // Use a different path for password reset on the frontend
       const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 

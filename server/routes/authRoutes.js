@@ -25,6 +25,6 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);   
 
 //  Route for handling token verification from email link
-router.post("/verify-token", verifyEmailToken); 
+router.get("/verify-email", verifyEmailToken);; 
 
 export default router;

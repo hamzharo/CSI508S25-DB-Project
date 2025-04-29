@@ -1,18 +1,18 @@
-// client/src/features/user.js
-import axios from "axios";
+// client/src/features/user.js - CORRECTED
+// import axios from "axios"; // Remove direct axios import
+import api from '../utils/api'; // Import your configured instance
 
-const API_URL = "http://localhost:5000/api/user";
+// const API_URL = "http://localhost:5000/api/user"; // Remove base URL
 
 // Fetch User Profile
 export const getUserProfile = async () => {
   try {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/profile`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    // Interceptor adds token
+    const response = await api.get(`/user/profile`); // Use relative path
+    return response.data; // Backend returns structured data with account info
   } catch (error) {
-    console.error("Error fetching user profile:", error);
+    console.error("Error fetching user profile:", error.response?.data || error.message);
+    // Return null or throw error based on handling preference
     return null;
   }
 };
@@ -20,12 +20,11 @@ export const getUserProfile = async () => {
 // Update User Profile
 export const updateUserProfile = async (updatedData) => {
   try {
-    const token = localStorage.getItem("token");
-    const response = await axios.put(`${API_URL}/profile`, updatedData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // Interceptor adds token
+    const response = await api.put(`/user/profile`, updatedData); // Use relative path
     return { success: true, message: response.data.message };
   } catch (error) {
+     console.error("Error updating user profile:", error.response?.data || error.message);
     return { success: false, message: error.response?.data?.message || "Update failed" };
   }
 };

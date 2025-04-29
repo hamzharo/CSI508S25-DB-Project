@@ -12,6 +12,7 @@ export default function EmailVerificationForm({ onVerified }) {
   const handleSendEmail = async () => {
     setLoading(true);
     const response = await sendVerificationEmail(email);
+    
     setLoading(false);
 
     if (response.error) {

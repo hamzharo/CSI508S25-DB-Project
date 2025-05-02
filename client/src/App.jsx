@@ -8,6 +8,8 @@ import AdminLayout from "./layouts/AdminLayout"; // Create this file next
 // --- Components ---
 import ProtectedRoute from "./components/ProtectedRoute"; // Import the guard
 
+import ProfilePage from "./pages/ProfilePage";
+
 // --- Public Pages ---
 import Home from "./pages/Home";
 import VerifyEmail from "./pages/VerifyEmail"; // Ensure correct filename (VerifyEmail.jsx vs VerifyEmailPage.jsx)
@@ -68,7 +70,8 @@ function App() {
                     <Route path="/dashboard" element={<UserDashboard />} />
                     <Route path="/transactions" element={<TransactionHistory />} />
                     <Route path="/transfer" element={<TransferFunds />} />
-                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    {/* <Route path="/profile" element={<UserProfile />} /> */}
                     {/* Add other customer-specific routes here */}
                     {/* Example: <Route path="/accounts/:id" element={<AccountDetails />} /> */}
                 </Route>

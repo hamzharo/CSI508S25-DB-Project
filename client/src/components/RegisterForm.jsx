@@ -1,7 +1,7 @@
 // client/src/components/RegisterForm.jsx - CORRECTED AND COMPLETED
-import Input from "@/components/ui/input";
-import Button from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import { Label } from "@/components/ui/Label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 

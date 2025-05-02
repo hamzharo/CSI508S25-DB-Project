@@ -1,7 +1,7 @@
 import { sendVerificationEmail } from "../utils/api";
 import Input  from "./ui/Input";
 import  Button  from "./ui/Button";
-import  {Label}  from "./ui/label";
+import  {Label}  from "./ui/Label";
 import  {useState}  from "react";
 
 export default function EmailVerificationForm({ onVerified }) {

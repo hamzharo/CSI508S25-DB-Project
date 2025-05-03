@@ -4,6 +4,7 @@ import cors from "cors";
 import db from "./config/db.js";
 import pool from "./config/db.js";
 
+
 //import { createUsersTable } from "./models/User.js";
 //import { createTransactionsTable } from "./models/Transaction.js";
 import authRoutes from "./routes/authRoutes.js";

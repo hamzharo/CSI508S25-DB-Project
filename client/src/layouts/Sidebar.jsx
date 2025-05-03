@@ -50,8 +50,8 @@ export default function Sidebar() {
 
     // --- DEFINE CUSTOMER NAVIGATION LINKS ---
     const customerLinks = [
-        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/accounts', label: 'Accounts', icon: LayoutDashboard },
+        // { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/dashboard', label: 'Accounts', icon: LayoutDashboard },
         { path: '/transactions', label: 'Transactions', icon: History },
         { path: '/transfer', label: 'Transfer Funds', icon: ArrowLeftRight },
         { path: '/support', label: 'Support Tickets', icon: Ticket },

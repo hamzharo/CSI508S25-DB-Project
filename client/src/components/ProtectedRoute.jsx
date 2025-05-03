@@ -11,7 +11,7 @@ import { AuthContext } from '../context/AuthContext'; // Make sure this path is 
  * @param {object} props
  * @param {string} [props.requiredRole] - The role required to access the route (e.g., 'admin', 'customer'). If omitted, only authentication is checked.
  */
-const ProtectedRoute = ({ requiredRole }) => {
+const ProtectedRoute = ({ children, requiredRole }) => {
     const { isAuthenticated, user, isLoading } = useContext(AuthContext);
     const location = useLocation(); // Get current location to redirect back after login
 
@@ -19,7 +19,7 @@ const ProtectedRoute = ({ requiredRole }) => {
     // It's important AuthContext provides an 'isLoading' state, especially
     // when initially checking for a token (e.g., from localStorage) on app load.
     if (isLoading) {
-        // You can replace this with a nicer loading spinner component
+        console.log('[ProtectedRoute] Loading authentication check...'); // Added log
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div>Loading Authentication...</div>
@@ -37,6 +37,18 @@ const ProtectedRoute = ({ requiredRole }) => {
         // 'replace' prevents the login page from being added to history stack.
     }
 
+    // --- ADD CHECK FOR USER OBJECT ---
+    // It's possible isAuthenticated is true briefly before user object is fully set
+    if (!user) {
+        console.log('[ProtectedRoute] Authenticated but user object not yet available. Loading...');
+         return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div>Loading User Data...</div>
+            </div>
+        );
+    }
+    // --- END USER CHECK ---
+
     // 3. Check Role (if a specific role is required for this route)
     if (requiredRole && user?.role !== requiredRole) {
         // User is logged in, but their role doesn't match the required role.
@@ -49,10 +61,16 @@ const ProtectedRoute = ({ requiredRole }) => {
         // return <Navigate to="/unauthorized" replace />;
     }
 
-    // 4. Access Granted: User is authenticated and has the correct role (or no role was required)
-    // Render the child components defined within this route in App.jsx
-    console.log(`[ProtectedRoute] Access granted for role: ${user?.role} (Required: ${requiredRole || 'any'}). Rendering Outlet.`);
-    return <Outlet />;
+    // --- MODIFICATION: Render 'children' instead of <Outlet /> ---
+    console.log(`[ProtectedRoute] Access granted for role: ${user.role} (Required: ${requiredRole || 'any'}). Rendering Children.`);
+    // Render the component(s) passed between the <ProtectedRoute> tags in App.jsx
+    return children;
+    // --- END MODIFICATION ---
+
+    // // 4. Access Granted: User is authenticated and has the correct role (or no role was required)
+    // // Render the child components defined within this route in App.jsx
+    // console.log(`[ProtectedRoute] Access granted for role: ${user?.role} (Required: ${requiredRole || 'any'}). Rendering Outlet.`);
+    // return <Outlet />;
 };
 
 export default ProtectedRoute;

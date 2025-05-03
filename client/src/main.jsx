@@ -3,8 +3,10 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
-import AuthProvider from "./context/AuthContext";
 import "./index.css"; // Ensure TailwindCSS is imported
+// main.jsx - for DEFAULT export in AuthContext.jsx
+import AuthProvider from "./context/AuthContext";
+
 
 console.log("Frontend is loading...");
 

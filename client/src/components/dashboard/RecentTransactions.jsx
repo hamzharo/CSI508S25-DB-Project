@@ -28,8 +28,10 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
 
     // Determine transaction type/description (adapt based on your actual transaction data structure)
     const getTransactionDetails = (txn) => {
+        console.group("txn is: ", txn);
         let description = txn.description || 'Transaction';
         let amount = Number(txn.amount) || 0;
+        let date = txn.timestamp;
         let isPositive = false;
 
         if (txn.type === 'deposit') {
@@ -47,7 +49,7 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
              // isPositive depends on perspective - cannot determine here easily without account context
         }
 
-         return { description, amount, isPositive };
+         return { description, amount, date, isPositive };
     };
 
 
@@ -81,7 +83,7 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
                 {!isLoading && transactions.length > 0 && (
                     <ul className="space-y-4">
                         {displayedTransactions.map((txn) => {
-                            const { description, amount, isPositive } = getTransactionDetails(txn);
+                            const { description, amount, date, isPositive } = getTransactionDetails(txn);
                             // Determine color based on amount sign AFTER determining description
                             const amountColor = amount >= 0 ? 'text-green-600' : 'text-red-600';
                             const formattedAmount = `${amount >= 0 ? '+' : ''}${formatCurrency(amount)}`;
@@ -90,7 +92,7 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
                                 <li key={txn._id || txn.id} className="flex justify-between items-center">
                                      <div>
                                         <p className="text-sm font-medium capitalize">{description}</p>
-                                        <p className="text-xs text-gray-500">{formatDate(txn.date)}</p>
+                                        <p className="text-xs text-gray-500">{formatDate(date)}</p>
                                     </div>
                                      <span className={`text-sm font-semibold ${amountColor}`}>
                                         {formattedAmount}

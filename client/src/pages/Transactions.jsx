@@ -72,6 +72,7 @@ export default function TransactionsPage() {
         let description = txn.description || 'Transaction';
         let type = txn.type || 'Unknown';
         let amount = Number(txn.amount) || 0;
+        let date = txn.timestamp;
 
         // Basic type formatting
         if (type === 'deposit') {
@@ -88,7 +89,7 @@ export default function TransactionsPage() {
 
         return {
             id: txn._id || txn.id, // Use unique ID for table key
-            date: formatDate(txn.date),
+            date: formatDate(date),
             description: description,
             type: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize type
             amountFormatted: formatCurrency(amount),

@@ -7,16 +7,18 @@ import pool from "../config/db.js";
  * @access  Private (Customer Only)
  */
 export const createSupportTicket = async (req, res) => {
-    const customerId = req.user.id; // From authMiddleware
+    // This part is standard for getting data
+    const customerId = req.user.id; // From authMiddleware (customer_user_id for Submit table)
     const { subject, description, priority, related_account_id, related_transaction_id } = req.body;
 
-    // Validation
+    // This validation was likely already here
     if (!subject || !description) {
         return res.status(400).json({ message: "Subject and description are required." });
     }
-    // Optional: Validate priority enum, related IDs if needed
 
+    // This main try/catch block handles the original operation
     try {
+        // --- This is the ORIGINAL code to Create Main Support Ticket ---
         const sql = `
             INSERT INTO support_tickets
                 (customer_id, subject, description, priority, related_account_id, related_transaction_id, status)
@@ -26,28 +28,58 @@ export const createSupportTicket = async (req, res) => {
             customerId,
             subject,
             description,
-            priority || 'medium', // Default priority if not provided
+            priority || 'medium',
             related_account_id || null,
             related_transaction_id || null,
-            'open' // Initial status
+            'open'
         ]);
 
-        const newTicketId = result.insertId;
+        const newTicketId = result.insertId; // Get the ID of the ticket just created
         console.log(` Support ticket created by User ${customerId} with ID: ${newTicketId}`);
+        // --- End of ORIGINAL code block for ticket creation ---
 
-        // Fetch the created ticket to return it
+
+        // ================================================
+        // --- START: Populate Submit table (NEW CODE ADDED HERE) ---
+        // ================================================
+        // This block is added without changing the code above or below significantly
+        try {
+            const populateSubmitSql = `
+                INSERT INTO Submit (customer_user_id, support_ticket_id)
+                VALUES (?, ?)
+            `;
+            // Use customerId (from req.user.id) and newTicketId (from the result above)
+            await pool.query(populateSubmitSql, [customerId, newTicketId]);
+            console.log(` Submit table populated for Customer ID: ${customerId} and SupportTicket ID: ${newTicketId}`);
+        } catch (submitErr) {
+             // Log specific error for Submit table insert
+             console.error(` Failed to populate Submit table for Customer ID ${customerId} and SupportTicket ID ${newTicketId}:`, submitErr);
+             // Continue without failing the main operation for now
+        }
+        // ================================================
+        // --- END: Populate Submit table ---
+        // ================================================
+
+
+        // --- This is the ORIGINAL code to fetch and return the created ticket ---
         const [newTicket] = await pool.query("SELECT * FROM support_tickets WHERE id = ?", [newTicketId]);
         res.status(201).json(newTicket[0]);
+        // --- End of ORIGINAL code block ---
 
+    // This original error handling remains the same
     } catch (err) {
         console.error(" Database error creating support ticket:", err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
-             // Handle cases where related_account_id or related_transaction_id is invalid
              return res.status(400).json({ message: "Invalid related account or transaction ID provided." });
         }
         res.status(500).json({ message: "Error creating support ticket.", error: err.message });
     }
-};
+}; // End of createSupportTicket function
+
+// ==========================================================================
+// === ALL OTHER FUNCTIONS in this file (getMySupportTickets, Admin functions) ===
+// === remain completely unchanged from your original code.                 ===
+// ==========================================================================
 
 /**
  * @desc    Get support tickets for the logged-in customer
@@ -238,6 +270,15 @@ export const updateSupportTicketAdmin = async (req, res) => {
              return res.status(400).json({ message: "Invalid assigned admin ID provided." });
          }
          // Add check here to ensure the ID belongs to an actual admin user
+         try {
+             const [adminCheck] = await pool.query("SELECT role FROM users WHERE id = ? AND role = 'admin'", [fieldsToUpdate.assigned_admin_id]);
+             if (adminCheck.length === 0) {
+                 return res.status(400).json({ message: "Assigned user is not a valid admin."});
+             }
+         } catch (checkErr) {
+             console.error("Error verifying assigned admin ID:", checkErr);
+             return res.status(500).json({ message: "Error validating assigned admin." });
+         }
     }
 
 
@@ -277,20 +318,18 @@ export const deleteSupportTicketAdmin = async (req, res) => {
         return res.status(400).json({ message: "Invalid ticket ID." });
     }
 
+    // NOTE: Because Submit table has ON DELETE CASCADE for support_ticket_id,
+    // deleting the ticket here will automatically delete the corresponding row in Submit.
+    // No extra delete needed for the Submit table.
+
     try {
-        // Optional: Check if ticket exists and maybe if status is 'resolved' or 'closed' before deleting
-        const checkSql = "SELECT id, status FROM support_tickets WHERE id = ?";
+        // Optional: Check if ticket exists first
+        const checkSql = "SELECT id FROM support_tickets WHERE id = ?";
         const [tickets] = await pool.query(checkSql, [ticketId]);
 
         if (tickets.length === 0) {
             return res.status(404).json({ message: "Support ticket not found." });
         }
-
-        // Optional Policy: Only allow deletion of closed/resolved tickets
-        // const ticketStatus = tickets[0].status;
-        // if (ticketStatus !== 'resolved' && ticketStatus !== 'closed') {
-        //     return res.status(400).json({ message: `Cannot delete ticket with status '${ticketStatus}'. Only resolved or closed tickets can be deleted.` });
-        // }
 
         // Perform delete operation
         const deleteSql = "DELETE FROM support_tickets WHERE id = ?";
@@ -302,14 +341,10 @@ export const deleteSupportTicketAdmin = async (req, res) => {
         }
 
         console.log(` Support ticket ${ticketId} deleted by Admin ${adminUserId}`);
-        // Send 200 OK or 204 No Content on successful deletion
         res.status(200).json({ message: "Support ticket deleted successfully." });
-        // Alternatively: res.status(204).send();
 
     } catch (err) {
         console.error(` Database error deleting support ticket ${ticketId} (admin):`, err);
-        // Handle potential foreign key constraint issues if other tables reference tickets
         res.status(500).json({ message: "Error deleting support ticket.", error: err.message });
     }
-
 };

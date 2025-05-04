@@ -74,49 +74,49 @@ export default function HomePage() {
                         {/* --- UPDATED FEATURES GRID (4x2 layout) --- */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {/* Feature 1: Account Overview */}
-                            <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <LayoutDashboard className="h-10 w-10 text-blue-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Account Overview</h3>
                                 <p className="text-gray-600 text-sm">Easily view and manage all your bank accounts in one secure dashboard.</p>
                             </div>
                             {/* Feature 2: Transactions */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <History className="h-10 w-10 text-teal-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Transactions</h3>
                                 <p className="text-gray-600 text-sm">Access your full transaction history with advanced filtering and sorting options.</p>
                             </div>
                             {/* Feature 3: Transfer Funds */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <ArrowLeftRight className="h-10 w-10 text-indigo-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Transfer Funds</h3>
                                 <p className="text-gray-600 text-sm">Send money between your accounts or to other users with quick and secure fund transfers.</p>
                             </div>
                             {/* Feature 4: Deposit */}
-                            <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <Download className="h-10 w-10 text-green-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Deposit</h3>
                                 <p className="text-gray-600 text-sm">Add funds to your account through multiple supported deposit methods.</p>
                             </div>
                              {/* Feature 5: Support Tickets */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <Ticket className="h-10 w-10 text-orange-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Support Tickets</h3>
                                 <p className="text-gray-600 text-sm">Need help? Submit support tickets directly through the platform and track their resolution.</p>
                             </div>
                               {/* Feature 6: Report Fraud */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <FileWarning className="h-10 w-10 text-red-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Report Fraud</h3>
                                 <p className="text-gray-600 text-sm">Immediately report suspicious activity or unauthorized transactions to keep your account safe.</p>
                             </div>
                              {/* Feature 7: Profile Management */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <User className="h-10 w-10 text-purple-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Profile Management</h3>
                                 <p className="text-gray-600 text-sm">Manage your personal details, contact info, and account preferences.</p>
                             </div>
                              {/* Feature 8: Settings */}
-                             <div className="p-6 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
                                 <SettingsIcon className="h-10 w-10 text-gray-600 mb-4 mx-auto" />
                                 <h3 className="text-xl font-semibold mb-2">Settings</h3>
                                 <p className="text-gray-600 text-sm">Customize your account settings, enable security features, and manage notifications.</p>

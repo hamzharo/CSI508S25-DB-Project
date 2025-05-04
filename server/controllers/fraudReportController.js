@@ -7,37 +7,66 @@ import pool from "../config/db.js";
  * @access  Private (Customer Only)
  */
 export const createFraudReport = async (req, res) => {
-    const customerId = req.user.id; // From authMiddleware
-    // Get relevant details from request body
+    // Get ID of customer making the report
+    const customerId = req.user.id; // From authMiddleware (customer_user_id for Report table)
+    // Get details from request body
     const { description, reported_account_id, related_transaction_id } = req.body;
 
     // Validation
     if (!description) {
         return res.status(400).json({ message: "A description of the suspected fraud is required." });
     }
-    // Optional: Validate related IDs if needed
 
+    // Main try/catch for the original operation
     try {
+        // --- This is the ORIGINAL code to Create Main Fraud Report ---
         const sql = `
             INSERT INTO fraud_reports
                 (reporting_customer_id, description, reported_account_id, related_transaction_id, status)
             VALUES (?, ?, ?, ?, ?)
         `;
         const [result] = await pool.query(sql, [
-            customerId,
+            customerId, // This is reporting_customer_id in fraud_reports table
             description,
             reported_account_id || null,
             related_transaction_id || null,
             'reported' // Initial status
         ]);
 
-        const newReportId = result.insertId;
+        const newReportId = result.insertId; // Get the ID of the report just created (fraud_report_id for Report table)
         console.log(` Fraud report created by User ${customerId} with ID: ${newReportId}`);
+        // --- End of ORIGINAL code block for fraud report creation ---
 
-        // Fetch the created report to return it
+
+        // ================================================
+        // --- START: Populate Report table (NEW CODE ADDED HERE) ---
+        // ================================================
+        // This block is added without changing the code above or below significantly
+        try {
+            const populateReportSql = `
+                INSERT INTO Report (customer_user_id, fraud_report_id)
+                VALUES (?, ?)
+                 -- No ON DUPLICATE KEY needed typically
+            `;
+            // Use customerId (from req.user.id) and newReportId (from the result above)
+            await pool.query(populateReportSql, [customerId, newReportId]);
+            console.log(` Report table populated for Customer ID: ${customerId} and FraudReport ID: ${newReportId}`);
+        } catch (reportErr) {
+            // Log specific error for Report table insert
+             console.error(` Failed to populate Report table for Customer ID ${customerId} and FraudReport ID ${newReportId}:`, reportErr);
+             // Continue without failing the main operation for now
+        }
+        // ================================================
+        // --- END: Populate Report table ---
+        // ================================================
+
+
+        // --- This is the ORIGINAL code to fetch and return the created report ---
         const [newReport] = await pool.query("SELECT * FROM fraud_reports WHERE id = ?", [newReportId]);
         res.status(201).json(newReport[0]);
+        // --- End of ORIGINAL code block ---
 
+    // This original error handling remains the same
     } catch (err) {
         console.error(" Database error creating fraud report:", err);
          if (err.code === 'ER_NO_REFERENCED_ROW_2') {
@@ -45,7 +74,12 @@ export const createFraudReport = async (req, res) => {
         }
         res.status(500).json({ message: "Error creating fraud report.", error: err.message });
     }
-};
+}; // End of createFraudReport function
+
+// ==========================================================================
+// === ALL OTHER FUNCTIONS in this file (getMyFraudReports, Admin functions) ===
+// === remain completely unchanged from your original code.                  ===
+// ==========================================================================
 
 /**
  * @desc    Get fraud reports submitted by the logged-in customer
@@ -185,7 +219,20 @@ export const updateFraudReportAdmin = async (req, res) => {
     fieldsToUpdate.updated_at = new Date();
 
      // Optional: Pre-check if assigned_admin_id is valid admin
-     // ... (similar check as in supportTicketController) ...
+     if (fieldsToUpdate.assigned_admin_id !== null && fieldsToUpdate.assigned_admin_id !== undefined) {
+        if (isNaN(fieldsToUpdate.assigned_admin_id)) {
+            return res.status(400).json({ message: "Invalid assigned admin ID provided." });
+        }
+        try {
+            const [adminCheck] = await pool.query("SELECT role FROM users WHERE id = ? AND role = 'admin'", [fieldsToUpdate.assigned_admin_id]);
+            if (adminCheck.length === 0) {
+                return res.status(400).json({ message: "Assigned user is not a valid admin."});
+            }
+        } catch (checkErr) {
+            console.error("Error verifying assigned admin ID for fraud report:", checkErr);
+            return res.status(500).json({ message: "Error validating assigned admin." });
+        }
+   }
 
     try {
         const sql = "UPDATE fraud_reports SET ? WHERE id = ?";

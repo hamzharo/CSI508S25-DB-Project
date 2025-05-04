@@ -7,6 +7,7 @@ import { Users, UserCheck, Building, Ticket, ShieldAlert, Loader2, AlertTriangle
 import api from '../utils/api'; // Your configured Axios instance
 import { toast } from 'react-hot-toast'; // Optional: for error notifications
 
+
 const AdminDashboard = () => {
     const [summaryData, setSummaryData] = useState({
         pendingApprovals: 0,
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+<Headers />
 
     useEffect(() => {
         const fetchSummary = async () => {

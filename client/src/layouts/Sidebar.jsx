@@ -14,6 +14,7 @@ import {
     LogOut,
     Ticket,
     FileWarning,
+    Download
 } from 'lucide-react';
 
 // --- STYLING CLASSES ---
@@ -49,18 +50,17 @@ export default function Sidebar() {
     };
 
     // --- DEFINE CUSTOMER NAVIGATION LINKS ---
-    const customerLinks = [
-        
+     // --- DEFINE CUSTOMER NAVIGATION LINKS ---
+     const customerLinks = [
         { path: '/dashboard', label: 'Accounts', icon: LayoutDashboard },
         { path: '/transactions', label: 'Transactions', icon: History },
         { path: '/transfer', label: 'Transfer Funds', icon: ArrowLeftRight },
-        { path: '/dashboard', label: 'Deposit', icon: LayoutDashboard },
+        { path: '/deposit', label: 'Deposit', icon: Download }, 
         { path: '/support', label: 'Support Tickets', icon: Ticket },
         { path: '/report-fraud', label: 'Report Fraud', icon: FileWarning },
         { path: '/profile', label: 'Profile', icon: User },
         { path: '/settings', label: 'Settings', icon: Settings },
     ];
-
     // If this Sidebar is *only* for customers, you don't need adminLinks/isAdmin check here
     const links = customerLinks;
 

@@ -32,6 +32,7 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
         let description = txn.description || 'Transaction';
         let amount = Number(txn.amount) || 0;
         let date = txn.timestamp;
+        let type = txn.type;
         let isPositive = false;
 
         if (txn.type === 'deposit') {
@@ -83,10 +84,10 @@ const RecentTransactions = ({ transactions = [], isLoading, limit = 5 }) => {
                 {!isLoading && transactions.length > 0 && (
                     <ul className="space-y-4">
                         {displayedTransactions.map((txn) => {
-                            const { description, amount, date, isPositive } = getTransactionDetails(txn);
+                            const { description, amount, date, type, isPositive } = getTransactionDetails(txn);
                             // Determine color based on amount sign AFTER determining description
-                            const amountColor = amount >= 0 ? 'text-green-600' : 'text-red-600';
-                            const formattedAmount = `${amount >= 0 ? '+' : ''}${formatCurrency(amount)}`;
+                            const amountColor = type === 'deposit' ? 'text-green-600' : 'text-red-600';
+                            const formattedAmount = `${type === 'deposit' ? '+' : '-'}${formatCurrency(amount)}`;
 
                              return (
                                 <li key={txn._id || txn.id} className="flex justify-between items-center">

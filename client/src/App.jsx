@@ -24,15 +24,16 @@ import SupportTickets from "./pages/SupportTickets";
 import ReportFraud from "./pages/ReportFraud";
 import ProfilePage from "./pages/ProfilePage";
 import Settings from "./pages/Settings";
+import HomePage from "./pages/HomePage";
 
 // --- Admin Pages ---
-import AdminDashboard from "./pages/AdminDashboard"; // Should be here
-// Correct paths assuming files are in src/pages/admin/
+import AdminDashboard from "./pages/AdminDashboard"; 
 import AdminUserList from "./pages/admin/AdminUserList";
 import AdminPendingUserList from "./pages/admin/AdminPendingUserList";
 import AdminSupportTicketList from "./pages/admin/AdminSupportTicketList"; // Placeholder component
 import AdminBranchManagement from "./pages/admin/AdminBranchManagement";   // Placeholder component
 import AdminFraudReportList from "./pages/admin/AdminFraudReportList"; // Placeholder component
+import DepositPage from "./pages/DepositPage";
 
 // import NotFound from "./pages/NotFound"; // Optional
 
@@ -41,7 +42,7 @@ function App() {
         <AuthProvider>
             <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
@@ -56,6 +57,7 @@ function App() {
                     <Route path="/report-fraud" element={<ReportFraud />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/deposit" element={<DepositPage />} />
                 </Route>
 
                 {/* Admin Routes */}

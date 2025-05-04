@@ -17,10 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Terminal } from "lucide-react"; // Icon
 
 // Helper function to format currency display
-const formatCurrency = (amount) => {
+const formatCurrency = (amount, type) => {
     const num = Number(amount);
     if (isNaN(num)) return '$--.--';
-    const sign = num >= 0 ? '+' : '-'; // Show + or - sign
+    const sign = type === 'deposit' ? '+' : '-'; // Show + or - sign
     // Format absolute value as currency
     return `${sign} ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Math.abs(num))}`;
 };
@@ -92,7 +92,7 @@ export default function TransactionsPage() {
             date: formatDate(date),
             description: description,
             type: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize type
-            amountFormatted: formatCurrency(amount),
+            amountFormatted: formatCurrency(amount, type),
             amountRaw: amount // Keep raw number for styling
         };
     };
@@ -150,7 +150,7 @@ export default function TransactionsPage() {
                                     <TableCell className="font-medium text-xs">{display.date}</TableCell>
                                     <TableCell>{display.description}</TableCell>
                                     <TableCell className="text-xs uppercase">{display.type}</TableCell>
-                                    <TableCell className={`text-right font-semibold ${display.amountRaw >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <TableCell className={`text-right font-semibold ${display.type === 'Deposit' ? 'text-green-600' : 'text-red-600'}`}>
                                         {display.amountFormatted}
                                     </TableCell>
                                 </TableRow>

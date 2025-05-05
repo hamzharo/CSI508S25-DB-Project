@@ -39,26 +39,26 @@ export const createSupportTicket = async (req, res) => {
         // --- End of ORIGINAL code block for ticket creation ---
 
 
-        // ================================================
-        // --- START: Populate Submit table (NEW CODE ADDED HERE) ---
-        // ================================================
-        // This block is added without changing the code above or below significantly
-        try {
-            const populateSubmitSql = `
-                INSERT INTO Submit (customer_user_id, support_ticket_id)
-                VALUES (?, ?)
-            `;
-            // Use customerId (from req.user.id) and newTicketId (from the result above)
-            await pool.query(populateSubmitSql, [customerId, newTicketId]);
-            console.log(` Submit table populated for Customer ID: ${customerId} and SupportTicket ID: ${newTicketId}`);
-        } catch (submitErr) {
-             // Log specific error for Submit table insert
-             console.error(` Failed to populate Submit table for Customer ID ${customerId} and SupportTicket ID ${newTicketId}:`, submitErr);
-             // Continue without failing the main operation for now
-        }
-        // ================================================
-        // --- END: Populate Submit table ---
-        // ================================================
+        // // ================================================
+        // // --- START: Populate Submit table (NEW CODE ADDED HERE) ---
+        // // ================================================
+        // // This block is added without changing the code above or below significantly
+        // try {
+        //     const populateSubmitSql = `
+        //         INSERT INTO Submit (customer_user_id, support_ticket_id)
+        //         VALUES (?, ?)
+        //     `;
+        //     // Use customerId (from req.user.id) and newTicketId (from the result above)
+        //     await pool.query(populateSubmitSql, [customerId, newTicketId]);
+        //     console.log(` Submit table populated for Customer ID: ${customerId} and SupportTicket ID: ${newTicketId}`);
+        // } catch (submitErr) {
+        //      // Log specific error for Submit table insert
+        //      console.error(` Failed to populate Submit table for Customer ID ${customerId} and SupportTicket ID ${newTicketId}:`, submitErr);
+        //      // Continue without failing the main operation for now
+        // }
+        // // ================================================
+        // // --- END: Populate Submit table ---
+        // // ================================================
 
 
         // --- This is the ORIGINAL code to fetch and return the created ticket ---

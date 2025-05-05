@@ -4,7 +4,7 @@ import Button from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from 'react-router-dom';
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext'; // Adjust path if needed
 
@@ -164,6 +164,7 @@ export default function RegisterForm({ email: initialEmail }) {
                     </div>
                 )}
 
+
                 {/* Basic Info */}
                 <div>
                     <Label htmlFor="firstName">First Name</Label>
@@ -268,7 +269,17 @@ export default function RegisterForm({ email: initialEmail }) {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Registering..." : "Register"}
                 </Button>
+                
+                <p>
+                  <Link to="/" className="text-gray-500 hover:text-blue-500 hover:underline">
+                    ← Back to Home
+                  </Link>
+                 </p>
+
             </form>
         </div>
     );
 }
+
+
+

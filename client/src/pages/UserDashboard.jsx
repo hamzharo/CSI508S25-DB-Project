@@ -69,7 +69,7 @@ const UserDashboard = () => {
         fetchDashboardData();
     }, []);
 
-    // --- Calculated Values (CORRECTED LOGIC) ---
+    // --- Calculated Values ---
     const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
 
     // Corrected Recent Income Calculation
@@ -149,7 +149,7 @@ const UserDashboard = () => {
                 />
                  <SummaryCard
                     title="Recent Expenses"
-                    value={formatCurrency(recentExpenses)} // Now uses corrected calculation
+                    value={formatCurrency(recentExpenses)} //  corrected calculation
                     icon="arrow-down"
                     trend="negative"
                     isLoading={isLoadingTransactions}

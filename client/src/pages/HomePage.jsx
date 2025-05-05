@@ -25,6 +25,16 @@ const HeroIllustration = () => (
 );
 
 export default function HomePage() {
+
+    // --- Helper function for smooth scrolling ---
+    const scrollToSection = (event, sectionId) => {
+        event.preventDefault(); // Prevent the default anchor link behavior (jumping)
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     return (
         <div className="flex flex-col min-h-screen bg-white text-gray-800 font-sans">
             {/* --- Header --- */}
@@ -34,9 +44,31 @@ export default function HomePage() {
                         <CompanyLogo />
                     </Link>
                     <nav className="hidden md:flex space-x-6 items-center">
-                         <Link to="/#features" className="text-gray-600 hover:text-blue-600">Features</Link>
-                         <Link to="/#about" className="text-gray-600 hover:text-blue-600">About Us</Link>
-                         <Link to="/#contact" className="text-gray-600 hover:text-blue-600">Contact</Link>
+                         {/* --- UPDATED: Use <a> tags and onClick for smooth scroll --- */}
+                         <a
+                            href="#features"
+                            onClick={(e) => scrollToSection(e, 'features')}
+                            className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                         >
+                            Features
+                         </a>
+                         <a
+                            href="#about"
+                            onClick={(e) => scrollToSection(e, 'about')}
+                            className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                         >
+                            About Us
+                         </a>
+                         <a
+                            href="#contact"
+                            onClick={(e) => scrollToSection(e, 'contact')}
+                            className="text-gray-600 hover:text-blue-600 cursor-pointer"
+                         >
+                            Contact
+                         </a>
+                         {/* --- END OF UPDATES --- */}
+
+                         {/* Keep Login/Register as React Router Links */}
                          <Button variant="outline" size="sm" asChild>
                             <Link to="/login">Login</Link>
                          </Button>
@@ -44,6 +76,9 @@ export default function HomePage() {
                              <Link to="/register">Register</Link>
                          </Button>
                     </nav>
+                     {/* --- Optional: Add basic mobile navigation (Example) --- */}
+                     {/* You might need a state to toggle this */}
+                     {/* <div className="md:hidden"> ... Mobile Menu Button ... </div> */}
                 </div>
             </header>
 
@@ -65,13 +100,11 @@ export default function HomePage() {
                      </div>
                 </section>
 
-                {/* --- Features Section --- */}
+                {/* --- Features Section (Ensure id="features") --- */}
                 <section id="features" className="py-16 lg:py-24 bg-white">
                     <div className="container mx-auto px-4 text-center">
-                        {/* --- UPDATED FEATURES TITLE --- */}
                         <h2 className="text-3xl font-bold mb-4 text-gray-800">🌟 Features</h2>
                         <p className="text-gray-600 mb-12 max-w-2xl mx-auto">Explore the tools designed to simplify your banking experience.</p>
-                        {/* --- UPDATED FEATURES GRID (4x2 layout) --- */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {/* Feature 1: Account Overview */}
                             <div className="p-6 border rounded-lg shadow-sm transition-shadow">
@@ -125,10 +158,9 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                 {/* --- About Us Section --- */}
+                 {/* --- About Us Section (Ensure id="about") --- */}
                 <section id="about" className="py-16 lg:py-24 bg-gray-50">
                     <div className="container mx-auto px-4 text-center">
-                         {/* --- UPDATED ABOUT CONTENT --- */}
                          <h2 className="text-3xl font-bold mb-4 text-gray-800">📘 About Us</h2>
                          <p className="text-gray-600 leading-relaxed max-w-3xl mx-auto mb-8">
                              Welcome to SecureNet Bank, a modern online banking platform created to empower users with a secure, flexible, and seamless banking experience.
@@ -151,14 +183,12 @@ export default function HomePage() {
                                  </ul>
                              </div>
                          </div>
-                         {/* --- END UPDATED CONTENT --- */}
                     </div>
                 </section>
 
-                 {/* --- Contact Section --- */}
+                 {/* --- Contact Section (Ensure id="contact") --- */}
                 <section id="contact" className="py-16 lg:py-24 bg-white">
                     <div className="container mx-auto px-4 text-center">
-                        {/* --- UPDATED CONTACT CONTENT --- */}
                          <h2 className="text-3xl font-bold mb-4 text-gray-800">📞 Contact Us</h2>
                          <p className="text-gray-600 mb-10">Have questions? Our support team is ready to help.</p>
                          <div className="max-w-4xl mx-auto space-y-8">
@@ -194,7 +224,6 @@ export default function HomePage() {
                                  <p className="text-gray-500">Follow us: <span className="text-blue-600">Facebook | Twitter | Instagram</span></p> {/* Replace with actual links */}
                              </div>
                          </div>
-                         {/* --- END UPDATED CONTENT --- */}
                     </div>
                 </section>
 
@@ -205,6 +234,7 @@ export default function HomePage() {
                 <div className="container mx-auto">
                      <p>© {new Date().getFullYear()} ONLINE BANK MANAGEMENT SYSTEM. All rights reserved.</p>
                      <div className="mt-2 space-x-4">
+                        {/* These should likely remain React Router Links if they go to separate pages */}
                         <Link to="/terms" className="hover:underline hover:text-white">Terms of Service</Link>
                         <Link to="/privacy" className="hover:underline hover:text-white">Privacy Policy</Link>
                     </div>
